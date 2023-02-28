@@ -1,0 +1,12 @@
+node_modules
+dist
+.tsbuildinfo
+coverage
+.vscode
+tests
+.husky
+.git
+.github
+.vscode
+.turbo
+.env

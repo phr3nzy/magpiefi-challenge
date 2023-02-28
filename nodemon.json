@@ -1,0 +1,7 @@
+{
+	"watch": ["lib"],
+	"ignore": ["tests/**/*", "prisma/**/*"],
+	"ext": "ts,mjs,js,json,graphql",
+	"exec": "etsc --config=etsc.config.js && node --trace-warnings --trace-deprecation --experimental-modules --es-module-specifier-resolution=node ./dist/index.js",
+	"legacyWatch": true
+}
