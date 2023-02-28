@@ -8,6 +8,7 @@ import db from './plugins/db.js';
 import health from './plugins/health.js';
 import urql from './plugins/urql.js';
 import validator from './plugins/validator.js';
+import swagger from './plugins/swagger.js';
 
 export const bootstrap = async () => {
 	const server = fastify(SERVER_CONFIG);
@@ -27,6 +28,8 @@ export const bootstrap = async () => {
 	await server.register(health);
 	// cron plugin will add cron support
 	await server.register(cron);
+	// swagger plugin registers /documentation route
+	await server.register(swagger);
 
 	// Register routes
 	await server.register(import('./routes/index.js'));
