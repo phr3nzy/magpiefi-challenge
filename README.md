@@ -31,6 +31,9 @@ $ docker compose up -d
 # create a development-only environment variables file
 $ cp .env.template .env
 
+# generate prisma client
+$ npm run generate
+
 # sync the database
 $ npm run push
 
