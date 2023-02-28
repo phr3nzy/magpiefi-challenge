@@ -10,10 +10,11 @@ There is also a documentation route that displays a Swagger UI (HTML) with all H
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/en/)
-- [MongoDB](https://www.mongodb.com/)
-- [Docker](https://www.docker.com/)
-- [Docker Compose](https://docs.docker.com/compose/)
+- [Node.js](https://nodejs.org/en/) v19+
+- [npm](https://www.npmjs.com/) v9+
+- [MongoDB](https://www.mongodb.com/) - no install needed (part of `docker-compose.yml`)
+- [Docker](https://www.docker.com/) v23+
+- [Docker Compose](https://docs.docker.com/compose/) v2+
 
 ## Installation
 
