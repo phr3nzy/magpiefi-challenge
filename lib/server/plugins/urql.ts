@@ -9,6 +9,7 @@ declare module 'fastify' {
 }
 
 export default fp(
+	// eslint-disable-next-line @typescript-eslint/require-await
 	async (app: FastifyInstance) => {
 		const client = urql.createClient({ url: app.config.GRAPH_API_URL });
 

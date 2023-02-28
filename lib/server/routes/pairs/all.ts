@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export default async function fetchAllPairsRoute(app: FastifyInstance) {
 	app.route({
 		method: 'GET',
