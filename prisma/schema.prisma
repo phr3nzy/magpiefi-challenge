@@ -1,0 +1,28 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Pair {
+  id                String   @id @default(uuid()) @map("_id") // Default identifier required by MongoDB
+  pairId            String   @unique // identifier from thegraph of the pair
+  token0            Json
+  token1            Json
+  reserve0          Float
+  reserve1          Float
+  reserveUSD        Float
+  trackedReserveETH Float
+  token0Price       Float
+  token1Price       Float
+  volumeUSD         Float
+  txCount           Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
