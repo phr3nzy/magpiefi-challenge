@@ -1,6 +1,6 @@
 # MagpieFi Challenge Solution
 
-A single CRON job ([here](./lib/server/plugins/cron.ts)) is responsible for updating the pairs from thegraph's endpoint. It will run every 30 minutes.
+A single CRON job ([here](./lib/server/plugins/cron.ts)) is responsible for updating the pairs from thegraph's endpoint. It will run every 30 minutes and will run the first time the server is started.
 
 An HTTP endpoint (`/pairs`) that fetches all pairs stored in the database is used to validate that the cron is working.
 
