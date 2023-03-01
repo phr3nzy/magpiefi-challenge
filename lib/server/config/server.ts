@@ -1,8 +1,8 @@
 import type { FastifyRequest, FastifyServerOptions } from 'fastify';
 import qs from 'qs';
 import { v4 as uuid } from 'uuid';
-import { logger } from './logger.js';
 import { AJV_CONFIG } from './ajv.js';
+import { logger } from './logger.js';
 
 // Generate a request id - this is used for logging and tracing
 function genReqId(_: FastifyRequest) {

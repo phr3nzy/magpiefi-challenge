@@ -6,9 +6,9 @@ import env from './plugins/config.js';
 import cron from './plugins/cron.js';
 import db from './plugins/db.js';
 import health from './plugins/health.js';
+import swagger from './plugins/swagger.js';
 import urql from './plugins/urql.js';
 import validator from './plugins/validator.js';
-import swagger from './plugins/swagger.js';
 
 export const bootstrap = async () => {
 	const server = fastify(SERVER_CONFIG);

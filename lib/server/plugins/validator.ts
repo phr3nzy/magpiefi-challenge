@@ -1,10 +1,10 @@
+import Ajv from 'ajv';
+import applyErrors from 'ajv-errors';
+import applyFormats from 'ajv-formats';
 import type { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import s from 'fluent-json-schema';
-import Ajv from 'ajv';
 import { AJV_CONFIG } from '../config/ajv.js';
-import applyFormats from 'ajv-formats';
-import applyErrors from 'ajv-errors';
 
 declare module 'fastify' {
 	interface FastifyInstance {

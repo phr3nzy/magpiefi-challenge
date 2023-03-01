@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import urql from 'urql';
 import fp from 'fastify-plugin';
+import urql from 'urql';
 
 declare module 'fastify' {
 	interface FastifyInstance {
