@@ -4,8 +4,6 @@ A single CRON job ([here](./lib/server/plugins/cron.ts)) is responsible for upda
 
 An HTTP endpoint (`/pairs`) that fetches all pairs stored in the database is used to validate that the cron is working.
 
-We could extend the functionality to only upsert newly updated values by storing a computed hash of the current values in a cache and then when refetching through the CRON to either insert or not based on the new payload's hash value.
-
 There is also a documentation route that displays a Swagger UI (HTML) with all HTTP routes in this codebase and what their schemas/return values are.
 
 ## Requirements
