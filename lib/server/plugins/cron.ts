@@ -70,7 +70,7 @@ export default fp(
 										}
 									}
 								`,
-									{ skip: 0 },
+									{ skip: 10 },
 								)
 								.toPromise();
 
@@ -127,10 +127,10 @@ export default fp(
 								const pairsToUpdate: ReturnType<typeof app.db.pair.update>[] =
 									[];
 
-								pairIdsInDb.forEach(id => {
+								pairsIdsToSync.forEach(id => {
 									// If we have pairs in the database matching ones in the fetched payload,
 									// we update the respective records
-									if (pairsIdsToSync.includes(id)) {
+									if (pairIdsInDb.includes(id)) {
 										const recordToUpdate = formattedPairs.find(pair => {
 											return pair.pairId === id;
 										});
