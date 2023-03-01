@@ -115,9 +115,66 @@ export default fp(
 								});
 							}
 
-							await app.db.pair.createMany({
-								data: formattedPairs,
-							});
+							// Let's first check if we have pairs in the database. This is so we update the few that we have
+							// and create the ones we don't.
+							const pairsInDb = await app.db.pair.findMany();
+
+							if (pairsInDb.length > 0) {
+								const pairIdsInDb = pairsInDb.map(pair => pair.pairId);
+								const pairsIdsToSync = formattedPairs.map(pair => pair.pairId);
+								const pairsToCreate: ReturnType<typeof app.db.pair.create>[] =
+									[];
+								const pairsToUpdate: ReturnType<typeof app.db.pair.update>[] =
+									[];
+
+								pairIdsInDb.forEach(id => {
+									// If we have pairs in the database matching ones in the fetched payload,
+									// we update the respective records
+									if (pairsIdsToSync.includes(id)) {
+										const recordToUpdate = formattedPairs.find(pair => {
+											return pair.pairId === id;
+										});
+										if (recordToUpdate) {
+											pairsToUpdate.push(
+												app.db.pair.update({
+													where: { pairId: recordToUpdate.pairId },
+													data: {
+														...recordToUpdate,
+													},
+												}),
+											);
+										}
+									} else {
+										// If we don't have that specific pairId in the database,
+										// we create a record for it
+										const recordToCreate = formattedPairs.find(pair => {
+											return pair.pairId === id;
+										});
+										if (recordToCreate) {
+											pairsToCreate.push(
+												app.db.pair.create({
+													data: {
+														...recordToCreate,
+													},
+												}),
+											);
+										}
+									}
+								});
+
+								// Run the transaction by first creating the pairs we don't have
+								// and then updating the ones that we do
+								const upsertedPairs = await app.db.$transaction([
+									...pairsToCreate,
+									...pairsToUpdate,
+								]);
+								app.log.debug(`${upsertedPairs.length} pairs upserted.`);
+							} else {
+								const createdPairs = await app.db.pair.createMany({
+									data: formattedPairs,
+								});
+								app.log.debug(`${createdPairs.count} pairs created.`);
+							}
 							app.log.debug('Pairs synced.');
 						} catch (error) {
 							app.log.error(error, 'Failed to sync pairs.');
