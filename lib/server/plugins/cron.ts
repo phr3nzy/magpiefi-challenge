@@ -1,3 +1,4 @@
+import { Pair } from '@prisma/client';
 import type { FastifyInstance } from 'fastify';
 import cron from 'fastify-cron';
 import fp from 'fastify-plugin';
@@ -40,9 +41,9 @@ export default fp(
 					startWhenReady: true,
 					onTick: async () => {
 						try {
-							app.log.debug('Syncing pairs from thegraph...');
+							app.log.info('Syncing pairs from thegraph...');
 							const { data, error } = await app.urql
-								.query<PairsQueryResult>(
+								.query<PairsQueryResult, { skip: number }>(
 									`
 									query pairs($skip: Int!) {
 										pairs(first: 1000, skip: $skip) {
@@ -70,11 +71,11 @@ export default fp(
 										}
 									}
 								`,
-									{ skip: 0 },
+									{ skip: 100 },
 								)
 								.toPromise();
 
-							if (!data) {
+							if (!data || error) {
 								throw new Error('Failed to fetch pairs', {
 									cause: {
 										data,
@@ -83,7 +84,7 @@ export default fp(
 								});
 							}
 
-							const formattedPairs = data?.pairs.map(pair => ({
+							const formattedPairs = data.pairs.flatMap(pair => ({
 								pairId: pair.id,
 								token0: {
 									id: pair.token0.id,
@@ -120,26 +121,35 @@ export default fp(
 							const pairsInDb = await app.db.pair.findMany();
 
 							if (pairsInDb.length > 0) {
-								const pairIdsInDb = pairsInDb.map(pair => pair.pairId);
-								const pairsIdsToSync = formattedPairs.map(pair => pair.pairId);
+								const pairsInDbMap = new Map<string, Pair>();
+								pairsInDb.forEach(pair => pairsInDbMap.set(pair.pairId, pair));
+
+								const pairsToSyncMap = new Map<
+									string,
+									(typeof formattedPairs)[number]
+								>();
+								formattedPairs.forEach(pair =>
+									pairsToSyncMap.set(pair.pairId, pair),
+								);
+								const pairIdsToSync = pairsToSyncMap.keys();
+
 								const pairsToCreate: ReturnType<typeof app.db.pair.create>[] =
 									[];
 								const pairsToUpdate: ReturnType<typeof app.db.pair.update>[] =
 									[];
 
-								pairsIdsToSync.forEach(id => {
+								for (const pairIdToSync of pairIdsToSync) {
 									// If we have pairs in the database matching ones in the fetched payload,
 									// we update the respective records
-									if (pairIdsInDb.includes(id)) {
-										const recordToUpdate = formattedPairs.find(pair => {
-											return pair.pairId === id;
-										});
+									if (pairsInDbMap.has(pairIdToSync)) {
+										const recordToUpdate = pairsToSyncMap.get(pairIdToSync);
 										if (recordToUpdate) {
+											const { pairId, ...pair } = recordToUpdate;
 											pairsToUpdate.push(
 												app.db.pair.update({
-													where: { pairId: recordToUpdate.pairId },
+													where: { pairId },
 													data: {
-														...recordToUpdate,
+														...pair,
 													},
 												}),
 											);
@@ -147,9 +157,7 @@ export default fp(
 									} else {
 										// If we don't have that specific pairId in the database,
 										// we create a record for it
-										const recordToCreate = formattedPairs.find(pair => {
-											return pair.pairId === id;
-										});
+										const recordToCreate = pairsToSyncMap.get(pairIdToSync);
 										if (recordToCreate) {
 											pairsToCreate.push(
 												app.db.pair.create({
@@ -160,23 +168,46 @@ export default fp(
 											);
 										}
 									}
-								});
+								}
 
 								// Run the transaction by first creating the pairs we don't have
 								// and then updating the ones that we do
-								const upsertedPairs = await app.db.$transaction([
-									...pairsToCreate,
-									...pairsToUpdate,
-								]);
-								app.log.debug(`${upsertedPairs.length} pairs upserted.`);
+								const trxPayload = [];
+
+								if (pairsToCreate.length >= 1) {
+									app.log.info(
+										`${pairsToCreate.length} pairs to be created...`,
+									);
+									trxPayload.push(...pairsToCreate);
+								}
+
+								if (pairsToUpdate.length >= 1) {
+									app.log.info(
+										`${pairsToUpdate.length} pairs to be updated...`,
+									);
+									trxPayload.push(...pairsToUpdate);
+								}
+
+								if (trxPayload.length >= 1) {
+									const upsertedPairs = await app.db.$transaction([
+										...trxPayload,
+									]);
+
+									app.log.info(
+										`${upsertedPairs.length} pairs updated/created.`,
+									);
+								} else {
+									app.log.info('Nothing to update/create');
+								}
 							} else {
 								const createdPairs = await app.db.pair.createMany({
 									data: formattedPairs,
 								});
-								app.log.debug(`${createdPairs.count} pairs created.`);
+								app.log.info(`${createdPairs.count} pairs created.`);
 							}
-							app.log.debug('Pairs synced.');
+							app.log.info('Pairs synced.');
 						} catch (error) {
+							Error.captureStackTrace(error as Error);
 							app.log.error(error, 'Failed to sync pairs.');
 						}
 					},
